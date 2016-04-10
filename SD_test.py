@@ -3,6 +3,16 @@ import smach
 import smach_ros
 from std_msgs.msg import String
 
+
+def callback(data):
+    rospy.loginfo("direction: " + data.data)
+
+def listener():
+    rospy.init_node('listner', anonymous=True)
+    rospy.Subscriber('topic', String, callback)
+
+    rospy.spin()
+
 #default state
 class Scanning(smach.State):
     def __init__(self):
@@ -39,13 +49,12 @@ class TurningLeft(smach.State):
 
         
 def main():
-    
-    #listener()
-    rospy.init_node('nav_FSM')
+
+    listener()
 
     #create top level SMACH state machine
     sm = smach.StateMachine(outcomes=['some_outcome'])
-
+"""
     #open the container !
     with sm:
         #Add states to the container
@@ -64,6 +73,6 @@ def main():
                                transitions={'routeClear':'SCANNING'})
 
         outcome = sm.execute()
-
+"""
 if __name__ == '__main__':
     main()
