@@ -35,16 +35,8 @@ class TurningLeft(smach.State):
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING LEFT')
         #implement
-def save_matrix():
-    rospy.loginfo('testing')
 
-#function which sets up FSM node
-def listener():
-    #don't actually know if I want the msg to be a string
-    pub = rospy.Subscriber('matrix_topic', String, save_matrix)
-    rospy.init_node('matrix_node', anonymous=True)
-    rate = rospy.Rate(10) #10 Hz
-    rospy.spin()
+
         
 def main():
     
