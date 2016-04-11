@@ -7,9 +7,11 @@ def talker():
     pub=rospy.Publisher('topic', String, queue_size=10)
     rospy.init_node('talker', anonymous=True)
     rate=rospy.Rate(10) #10 hz
+    #a = ['objectFound', 'objectRight', 'routeClear']
+    a = 'objectFound'
     while not rospy.is_shutdown():
-        string = "turn left"
-        pub.publish(string)
+        #for i in a:
+        pub.publish(a)
         rate.sleep()
     '''
     while not rospy.is_shutdown():
