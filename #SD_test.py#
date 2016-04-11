@@ -5,8 +5,7 @@ from std_msgs.msg import String
 
 
 def callback(data):
-    #rospy.loginfo("direction: " + data.data)
-    pass
+    rospy.loginfo("direction: " + data.data)
 
 def listener():
     rospy.init_node('listner', anonymous=True)
@@ -59,22 +58,21 @@ def main():
     with sm:
         #Add states to the container
         smach.StateMachine.add('SCANNING', Scanning(),
-                               transitions={'objectFound':'SCANNING'})
-    outcome = sm.execute()
-"""
+                               transitions={'objectFound':'DECIDING'})
+    
+
 
         smach.StateMachine.add('DECIDING', Deciding(),
                                transitions={'objectRight':'TURNINGLEFT',
                                             'objectLeft':'TURNINGRIGHT'})
-
+"""
 
         smach.StateMachine.add('TURNINGRIGHT', TurningRight(),
                                transitions={'routeClear':'SCANNING'})
 
         smach.StateMachine.add('TURNINGLEFT', TurningRight(),
                                transitions={'routeClear':'SCANNING'})
-
-outcome = sm.execute()
 """
+    outcome = sm.execute()
 if __name__ == '__main__':
     main()
