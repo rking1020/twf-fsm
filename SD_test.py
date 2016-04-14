@@ -3,10 +3,10 @@ import smach
 import smach_ros
 from std_msgs.msg import String
 
-def test_listen():
-    a = "objectFound"
-    rospy.loginfo("dir: " + a)
-    return a
+def snag(i):
+    a = ["objectFound", "objectRight", "routeClear"]
+    rospy.loginfo("dir: " + a[i])
+    return a[i]
 
 #functions to set up subscriber node
 def callback(data):
@@ -16,7 +16,7 @@ def callback(data):
 def listener():
     rospy.init_node('listner', anonymous=True)
     rospy.Subscriber('topic', String, callback)
-    rospy.loginfor(String)
+    rospy.loginfo(String)
     #rospy.spin()
     #return String#rospy.loginfo('state: ' + data.data)
    # rospy.spin()
@@ -24,71 +24,91 @@ def listener():
 #default state
 class Scanning(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['objectFound'])
+        smach.State.__init__(self, outcomes=['objectFound', 'exit'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state SCANNING')
-        #return 'objectFound'
+        if userdata.counter < 3:
+            state = snag(userdata.counter)
+            return state
+        else:
+            state = "exit"
+            return state
         #return test_listen()
-        return listener()
+#        return listener()
 #Object has been found...where do we go?
 class Deciding(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft', 'objectFound'])
+        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft', 'objectFound', 'exit'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state DECIDING')
-        #implement
-        #return 'objectRight'
-        return test_listen()
+        if userdata.counter < 3:
+            state = snag(userdata.counter)
+            return state            
+        else:
+            state = "exit"
+            return state
+        
 
 class TurningRight(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['routeClear'])
+        smach.State.__init__(self, outcomes=['routeClear', 'exit'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING RIGHT')
-        #implement
-        
-        return 'routeClear'
+        if userdata.counter < 3:
+            state = snag(userdata.counter)
+            return state
+        else:
+            state = "exit"
+            return state
 
 class TurningLeft(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['routeClear'])
+        smach.State.__init__(self, outcomes=['routeClear', 'exit'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING LEFT')
         #implement
-        #return data.data
-        return 'routeClear'
+        if userdata.counter < 3:
+            state = snag(userdata.counter)
+            return state
+        else:
+            state = "exit"
+            return state
         
 def main():
 
     rospy.init_node('smach__state_machine')
     #create top level SMACH state machine
-    sm = smach.StateMachine(outcomes=['some_outcome'])
+    sm = smach.StateMachine(outcomes=['last_outcome'])
     #open the container !
-   
+    sm.userdata.counter = 0
     with sm:
     #    listener()
         
         #Add states to the container
         smach.StateMachine.add('SCANNING', Scanning(),
-                               transitions={'objectFound':'DECIDING'})
+                               transitions={'objectFound':'DECIDING', 
+                                            'exit':'last_outcome'})
     
 
 
         smach.StateMachine.add('DECIDING', Deciding(),
                                transitions={'objectRight':'TURNINGLEFT',
                                             'objectLeft':'TURNINGRIGHT', 
-                                            'objectFound':'SCANNING'}) 
+                                            'objectFound':'SCANNING', 
+                                            'exit':'last_outcome'}) 
     
 
         smach.StateMachine.add('TURNINGRIGHT', TurningRight(),
-                               transitions={'routeClear':'SCANNING'})
+                               transitions={'routeClear':'SCANNING',
+                                            'exit':'last_outcome'})
 
         smach.StateMachine.add('TURNINGLEFT', TurningRight(),
-                               transitions={'routeClear':'SCANNING'})
+                               transitions={'routeClear':'SCANNING', 
+                                            'exit':'last_outcome'})
 
     outcome = sm.execute()
 
