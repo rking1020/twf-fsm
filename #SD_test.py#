@@ -3,15 +3,37 @@ import smach
 import smach_ros
 from std_msgs.msg import String
 
+def get_power(direction):
+    options = {"forward": [0.5, 0.5],
+               "moderate left": [0, 0.5],
+               "moderate right": [0.5, 0
+               "run away"}
+    
+#subscriber functions
+def drive_motor(mp1, mp2):
+    pub = rospy.Publisher('MotorPower', String, queue_size=10)
+    rospy.init_noe('talker', anonymous=True)
+    rate = rospy.Rate(10)
+    #publish appropriate motor power
+    pub.publish(mp1, mp2)
+    
+def test_listen():
+    a = "objectFound"
+    rospy.loginfo("dir: " + a)
+    return a
 
+#functions to set up subscriber node
 def callback(data):
     rospy.loginfo("direction: " + data.data)
+    
 
 def listener():
     rospy.init_node('listner', anonymous=True)
     rospy.Subscriber('topic', String, callback)
-
-    rospy.spin()
+    rospy.loginfor(String)
+    #rospy.spin()
+    #return String#rospy.loginfo('state: ' + data.data)
+   # rospy.spin()
 
 #default state
 class Scanning(smach.State):
@@ -20,15 +42,19 @@ class Scanning(smach.State):
 
     def execute(self, userdata):
         rospy.loginfo('executing state SCANNING')
-    
+        #return 'objectFound'
+        #return test_listen()
+        return listener()
 #Object has been found...where do we go?
 class Deciding(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft'])
+        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft', 'objectFound'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state DECIDING')
         #implement
+        #return 'objectRight'
+        return test_listen()
 
 class TurningRight(smach.State):
     def __init__(self):
@@ -37,6 +63,8 @@ class TurningRight(smach.State):
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING RIGHT')
         #implement
+        
+        return 'routeClear'
 
 class TurningLeft(smach.State):
     def __init__(self):
@@ -45,17 +73,19 @@ class TurningLeft(smach.State):
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING LEFT')
         #implement
-
-
+        #return data.data
+        return 'routeClear'
         
 def main():
 
-    listener()
-
+    rospy.init_node('smach__state_machine')
     #create top level SMACH state machine
     sm = smach.StateMachine(outcomes=['some_outcome'])
     #open the container !
+   
     with sm:
+    #    listener()
+        
         #Add states to the container
         smach.StateMachine.add('SCANNING', Scanning(),
                                transitions={'objectFound':'DECIDING'})
@@ -64,15 +94,17 @@ def main():
 
         smach.StateMachine.add('DECIDING', Deciding(),
                                transitions={'objectRight':'TURNINGLEFT',
-                                            'objectLeft':'TURNINGRIGHT'})
-"""
+                                            'objectLeft':'TURNINGRIGHT', 
+                                            'objectFound':'SCANNING'}) 
+    
 
         smach.StateMachine.add('TURNINGRIGHT', TurningRight(),
                                transitions={'routeClear':'SCANNING'})
 
         smach.StateMachine.add('TURNINGLEFT', TurningRight(),
                                transitions={'routeClear':'SCANNING'})
-"""
+
     outcome = sm.execute()
+
 if __name__ == '__main__':
     main()
