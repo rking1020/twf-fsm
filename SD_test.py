@@ -24,59 +24,68 @@ def listener():
 #default state
 class Scanning(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['objectFound', 'exit'])
+        smach.State.__init__(self, outcomes=['objectFound', 'exit'], 
+                             input_keys=['counter_in'], 
+                             output_keys = ['counter_out'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state SCANNING')
-        if userdata.counter < 3:
-            state = snag(userdata.counter)
-            return state
+        if userdata.counter_in < 3:
+            state = snag(userdata.counter_in)
         else:
             state = "exit"
-            return state
+        userdata.counter_out = userdata.counter_in + 1
+        return state
         #return test_listen()
 #        return listener()
 #Object has been found...where do we go?
 class Deciding(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft', 'objectFound', 'exit'])
+        smach.State.__init__(self, outcomes=['objectRight', 'objectLeft', 'objectFound', 'exit'], 
+                             input_keys=['counter_in'], 
+                             output_keys = ['counter_out'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state DECIDING')
-        if userdata.counter < 3:
-            state = snag(userdata.counter)
-            return state            
+        if userdata.counter_in < 3:
+            state = snag(userdata.counter_in)
         else:
             state = "exit"
-            return state
+        userdata.counter_in = userdata.counter_out + 1
+        return state
         
 
 class TurningRight(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['routeClear', 'exit'])
+        smach.State.__init__(self, outcomes=['routeClear', 'exit'], 
+                             input_keys=['counter_in'], 
+                             output_keys = ['counter_out'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING RIGHT')
-        if userdata.counter < 3:
-            state = snag(userdata.counter)
-            return state
+        if userdata.counter_in < 3:
+            state = snag(userdata.counter_in)
         else:
             state = "exit"
-            return state
+        userdata.counter_out = userdata.counter_out + 1            
+        return state
 
 class TurningLeft(smach.State):
     def __init__(self):
-        smach.State.__init__(self, outcomes=['routeClear', 'exit'])
+        smach.State.__init__(self, outcomes=['routeClear', 'exit'], 
+                             input_keys=['counter_in'], 
+                             output_keys = ['counter_out'])
 
     def execute(self, userdata):
         rospy.loginfo('executing state TURNING LEFT')
         #implement
-        if userdata.counter < 3:
-            state = snag(userdata.counter)
-            return state
+        if userdata.counter_in < 3:
+            state = snag(userdata.counter_in)
+            
         else:
             state = "exit"
-            return state
+        userdata.counter_out = userdata.counter_in + 1    
+        return state
         
 def main():
 
@@ -91,7 +100,10 @@ def main():
         #Add states to the container
         smach.StateMachine.add('SCANNING', Scanning(),
                                transitions={'objectFound':'DECIDING', 
-                                            'exit':'last_outcome'})
+                                            'exit':'last_outcome'}, 
+                               remapping = {'counter_in':'counter', 
+                                            'counter_out':'counter'})
+
     
 
 
@@ -99,16 +111,22 @@ def main():
                                transitions={'objectRight':'TURNINGLEFT',
                                             'objectLeft':'TURNINGRIGHT', 
                                             'objectFound':'SCANNING', 
-                                            'exit':'last_outcome'}) 
+                                            'exit':'last_outcome'}, 
+                               remapping = {'counter_in':'counter', 
+                                            'counter_out':'counter'}) 
     
 
         smach.StateMachine.add('TURNINGRIGHT', TurningRight(),
                                transitions={'routeClear':'SCANNING',
-                                            'exit':'last_outcome'})
+                                            'exit':'last_outcome'}, 
+                               remapping = {'counter_in':'counter', 
+                                            'counter_out':'counter'})
 
         smach.StateMachine.add('TURNINGLEFT', TurningRight(),
                                transitions={'routeClear':'SCANNING', 
-                                            'exit':'last_outcome'})
+                                            'exit':'last_outcome'}, 
+                               remapping = {'counter_in':'counter', 
+                                            'counter_out':'counter'})
 
     outcome = sm.execute()
 
